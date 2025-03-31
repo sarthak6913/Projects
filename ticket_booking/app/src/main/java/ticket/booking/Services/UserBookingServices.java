@@ -106,13 +106,13 @@ public class UserBookingServices {
 
                 switch (choice){
                     case 1:
-                        fetchBookings(nametoLogin,passwordtoLogin);
+                        fetchBookings(userLogin);
                         break;
                     case 2:
-                        bookTickets(nametoLogin,passwordtoLogin);
+                        bookTickets(userLogin);
                         break;
                     case 3:
-                        cancelTickets(nametoLogin,passwordtoLogin);
+                        cancelTickets(userLogin);
                         break;
                     case 4:
                         break;
@@ -135,17 +135,17 @@ public class UserBookingServices {
         obj.writeValue(users,userList);
     }
 
-    public void fetchBookings(String username, String password) throws Exception {
-        Optional<User> userFetched = userList.stream().filter((user1)->{return user1.getName().equalsIgnoreCase(username) && user1.getPassword().equalsIgnoreCase(password);}).findFirst();
+    public void fetchBookings(Optional<User> userFetched) throws Exception {
+        //Optional<User> userFetched = userList.stream().filter((user1)->{return user1.getName().equalsIgnoreCase(username) && user1.getPassword().equalsIgnoreCase(password);}).findFirst();
         if (userFetched.isPresent()) {
             userFetched.get().printTickets();
         }
-        else System.out.println("No Tickets Found");
+        else {System.out.println("No Tickets Found");}
     }
 
-    public void bookTickets(String username, String password) throws IOException {
+    public void bookTickets(Optional<User> userFetched) throws IOException {
 
-        Optional<User> userFetched = userList.stream().filter((user1)->{return user1.getName().equalsIgnoreCase(username) && user1.getPassword().equalsIgnoreCase(password);}).findFirst();
+        //Optional<User> userFetched = userList.stream().filter((user1)->{return user1.getName().equalsIgnoreCase(username) && user1.getPassword().equalsIgnoreCase(password);}).findFirst();
 
         sc= new Scanner(System.in);
         System.out.println("Please Enter the Source");
@@ -158,11 +158,8 @@ public class UserBookingServices {
         trainServices= new TrainServices();
 
         trainServices.validTrain(source,destination);
-
         Optional<Train> trainRequested= trainServices.trainList.stream().filter(train1 -> {return train1.getStationTimes().containsKey(source) && train1.getStationTimes().containsKey(destination);}).findFirst();
         Ticket ticket1= new Ticket(UUID.randomUUID().toString(),userFetched.get().getUserId(),source,destination,date,new Train(trainRequested.get().getTrainId(),trainRequested.get().getTrainNo(),trainRequested.get().getSeats(),trainRequested.get().getStationTimes(),trainRequested.get().getStations()));
-
-
 
         ticketList= new ArrayList<>();
         ticketList.add(ticket1);
@@ -174,14 +171,14 @@ public class UserBookingServices {
 
     }
 
-    public void cancelTickets(String username, String password) throws Exception {
+    public void cancelTickets(Optional<User> userFetched) throws Exception {
 
-        fetchBookings(username,password);
+        fetchBookings(userFetched);
         System.out.println("Please Enter the ticket ID");
         sc= new Scanner(System.in);
         String ticketId= sc.next();
 
-        Optional<User> userFetched = userList.stream().filter((user1)->{return user1.getName().equalsIgnoreCase(username) && user1.getPassword().equalsIgnoreCase(password);}).findFirst();
+        //Optional<User> userFetched = userList.stream().filter((user1)->{return user1.getName().equalsIgnoreCase(username) && user1.getPassword().equalsIgnoreCase(password);}).findFirst();
 
         userFetched.get().getTicketsBooked().removeIf(ticket1 ->{return ticket1.getTicketId().equalsIgnoreCase(ticketId);});
         userList.add(userFetched.get());
