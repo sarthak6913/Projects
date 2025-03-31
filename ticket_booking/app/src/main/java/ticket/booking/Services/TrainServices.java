@@ -27,7 +27,7 @@ public class TrainServices{
     }
 
     public void searchTrains(String source, String destination){
-        validTrain(source,destination);
+        if(validTrain(source,destination)){
         List<Train> tr= trainList.stream().filter(train1 -> train1.getStationTimes().containsKey(source) && train1.getStationTimes().containsKey(destination)).collect(Collectors.toList());
         if(tr.isEmpty()){
             System.out.println("No Trains Available");
@@ -42,8 +42,11 @@ public class TrainServices{
             }
         }
     }
-
-    public void validTrain(String source, String destination){
+        else{
+            System.out.println("Invalid Source or Destination");
+        }
+    }
+    public boolean validTrain(String source, String destination){
         int sourceIndex=-1;
         int destinationIndex=-1;
 
@@ -52,8 +55,9 @@ public class TrainServices{
              destinationIndex=i.getStations().indexOf(destination);
         }
         if(sourceIndex==-1 || destinationIndex==-1 || sourceIndex>=destinationIndex){
-            System.out.println("Source or Destination is invalid");
+            return false;
         }
+        return true;
         }
     }
 
