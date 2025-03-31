@@ -95,6 +95,10 @@ public class App {
                         }
                     case 7:
                         System.out.println("Thank you for checking out my small project :)");
+                        break;
+                    default:
+                        System.out.println("Please input the correct option, thanks");
+                        break;
                 }
             } catch (Exception e) {
                 System.out.println("Something Went Wrong");
