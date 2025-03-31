@@ -10,39 +10,35 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class UserBookingServices {
 
-    User user;
-    //Train trains;
-    Ticket tickets;
+    //User user;
     List<User> userList;
     List<Ticket> ticketList;
     private final String USERS_PATH = "app/src/main/java/ticket/booking/localDb/users.json";
     TrainServices trainServices;
+   // Iterator it;
 
     ObjectMapper obj;
     Scanner sc;
 
 
-    public UserBookingServices(User user) throws Exception {
-        this.user= user;
-        loadUsers();
-    }
+//    public UserBookingServices(User user) throws Exception {
+//        this.user= user;
+//        loadUsers();
+//    }
 
     public UserBookingServices() throws Exception {loadUsers();}
 
 
     public String signUp() throws Exception {
-
-        //loadUsers();
         sc= new Scanner(System.in);
-
         System.out.println("Welcome to Sign Up");
         System.out.println("Please enter the username");
         String nametoSignUp= sc.next();
-       // System.out.println(userList);
-        Optional<User> usersFound=userList.stream().filter((user1)->{return user1.getName().equalsIgnoreCase(nametoSignUp);}).findFirst();
+        Optional<User> usersFound=userList.stream().filter((user1)-> user1.getName().equalsIgnoreCase(nametoSignUp)).findFirst();
 
         if (usersFound.isPresent()){return "Username already taken";}
 
@@ -60,16 +56,12 @@ public class UserBookingServices {
     }
 
     public void loginUser() throws Exception {
-
         sc= new Scanner(System.in);
-
-        //trainServices.loadTrains();
         System.out.println("Welcome to Login");
         System.out.println("Please enter the username");
         String nametoLogin= sc.next();
 
-        List<User> checkIfUserExists= userList.stream().filter((user1)->{return user1.getName().equalsIgnoreCase(nametoLogin);}).collect(Collectors.toList());
-
+        List<User> checkIfUserExists= userList.stream().filter((user1)-> user1.getName().equalsIgnoreCase(nametoLogin)).collect(Collectors.toList());
 
         if(checkIfUserExists.isEmpty()) {
             System.out.println("This user is not present. Do you wish to create one?");
@@ -84,15 +76,17 @@ public class UserBookingServices {
                 case 2:
                     break;
             }
-
         }
         else{
                 System.out.println("Please enter the password");
                 String passwordtoLogin= sc.next();
                 Optional<User> userLogin= userList.stream().filter((user1)->{return user1.getName().equalsIgnoreCase(nametoLogin) && user1.getPassword().equalsIgnoreCase(passwordtoLogin);}).findFirst();
+                if(userLogin.isEmpty()){
+                    System.out.println("Wrong Password, sending you back to login page");
+                    loginUser();
+                }
                 String id= userLogin.get().getUserId();
                 String name= userLogin.get().getName();
-
 
                 System.out.println("Hello "+name);
                 System.out.println("Your user ID is "+id);
@@ -103,7 +97,6 @@ public class UserBookingServices {
                 System.out.println("4. Return to Main Menu");
 
                 int choice= sc.nextInt();
-
                 switch (choice){
                     case 1:
                         fetchBookings(userLogin);
@@ -116,11 +109,9 @@ public class UserBookingServices {
                         break;
                     case 4:
                         break;
-
                 }
         }
     }
-
     public void loadUsers() throws Exception{
         File users= new File(USERS_PATH);
         obj= new ObjectMapper();
@@ -128,25 +119,18 @@ public class UserBookingServices {
         userList=obj.readValue(users, new TypeReference<List<User>>(){});
 
     }
-
     public void saveToUsers() throws IOException {
         File users= new File(USERS_PATH);
         obj= new ObjectMapper();
         obj.writeValue(users,userList);
     }
-
     public void fetchBookings(Optional<User> userFetched) throws Exception {
-        //Optional<User> userFetched = userList.stream().filter((user1)->{return user1.getName().equalsIgnoreCase(username) && user1.getPassword().equalsIgnoreCase(password);}).findFirst();
         if (userFetched.isPresent()) {
             userFetched.get().printTickets();
         }
         else {System.out.println("No Tickets Found");}
     }
-
     public void bookTickets(Optional<User> userFetched) throws IOException {
-
-        //Optional<User> userFetched = userList.stream().filter((user1)->{return user1.getName().equalsIgnoreCase(username) && user1.getPassword().equalsIgnoreCase(password);}).findFirst();
-
         sc= new Scanner(System.in);
         System.out.println("Please Enter the Source");
         String source=sc.next();
@@ -156,35 +140,44 @@ public class UserBookingServices {
         String date= sc.next();
 
         trainServices= new TrainServices();
-
         trainServices.validTrain(source,destination);
+
         Optional<Train> trainRequested= trainServices.trainList.stream().filter(train1 -> {return train1.getStationTimes().containsKey(source) && train1.getStationTimes().containsKey(destination);}).findFirst();
         Ticket ticket1= new Ticket(UUID.randomUUID().toString(),userFetched.get().getUserId(),source,destination,date,new Train(trainRequested.get().getTrainId(),trainRequested.get().getTrainNo(),trainRequested.get().getSeats(),trainRequested.get().getStationTimes(),trainRequested.get().getStations()));
 
         ticketList= new ArrayList<>();
         ticketList.add(ticket1);
+        if(userFetched.get().getTicketsBooked().isEmpty()==Boolean.FALSE){
+            for(Ticket i:userFetched.get().getTicketsBooked()){
+                ticketList.add(i);
+        }
+        }
         userFetched.get().setTicketsBooked(ticketList);
+        Iterator<User> it= userList.iterator();
+        while(it.hasNext()){
+            User us= it.next();
+            if(us.getUserId().equalsIgnoreCase(userFetched.get().getUserId())){
+                it.remove();
+            }
+        }
         userList.add(userFetched.get());
-
         saveToUsers();
         System.out.println("Ticket has been booked");
 
     }
-
     public void cancelTickets(Optional<User> userFetched) throws Exception {
-
         fetchBookings(userFetched);
         System.out.println("Please Enter the ticket ID");
         sc= new Scanner(System.in);
         String ticketId= sc.next();
 
-        //Optional<User> userFetched = userList.stream().filter((user1)->{return user1.getName().equalsIgnoreCase(username) && user1.getPassword().equalsIgnoreCase(password);}).findFirst();
-
-        userFetched.get().getTicketsBooked().removeIf(ticket1 ->{return ticket1.getTicketId().equalsIgnoreCase(ticketId);});
-        userList.add(userFetched.get());
+        Boolean isTicketCancelled=userFetched.get().getTicketsBooked().removeIf(ticket1 ->{return ticket1.getTicketId().equalsIgnoreCase(ticketId);});
+        if(isTicketCancelled){
         saveToUsers();
         System.out.println("Your ticket has been Cancelled");
-
+        }
+        else{
+            System.out.println("The Ticket with Ticket ID: "+ticketId+" could not be found.");
+        }
     }
-
 }
